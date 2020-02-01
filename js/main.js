@@ -11,12 +11,9 @@ function drawCircle(ctx, x, y, r, arcLength, pi) {
     ctx.stroke();
 }
 
-var drawOuter = drawCircle(ctx, x, y, r, arcLength, pi);
-var drawInner = drawCircle(ctx, x, y, r, arcLength, pi);
-
 function drawEyes(eyes, ctx) {  
-    drawOuter(ctx, eyes.x, eyes.y, eyes.r1);
-    drawInner(ctx, eyes.x, eyes.y, eyes.r2);
+    drawCircle(ctx, eyes.x, eyes.y, eyes.r1);
+    drawCircle(ctx, eyes.x, eyes.y, eyes.r2);
 }
 
 function animate(eyes, canvas, ctx, mousePositionX, mousePositionY) {

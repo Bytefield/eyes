@@ -1,0 +1,1 @@
+Eye animation using vanilla js. The pupils follow the mouse cursor.
