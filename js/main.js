@@ -1,32 +1,3 @@
-window.requestAnimFrame = (function(callback) {
-    return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame ||
-    function(callback) {
-        window.setTimeout(callback, 1000 / 60);
-    };
-})();
-
-function drawCircle(ctx, x, y, r, arcLength, pi) {
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.stroke();
-}
-
-function drawEyes(eyes, ctx) {  
-    drawCircle(ctx, eyes.x, eyes.y, eyes.r1);
-    drawCircle(ctx, eyes.x, eyes.y, eyes.r2);
-}
-
-function animate(eyes, canvas, ctx, mousePositionX, mousePositionY) {
-    // clear
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    drawEyes(eyes, ctx);
-
-    // request new frame
-    requestAnimFrame(function() {
-        animate(eyes, canvas, ctx, mousePositionX, mousePositionY);
-    });
-}
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
 
@@ -44,23 +15,54 @@ var boundaries = {
     YMax: eyes.y + (eyes.r1 / 2)
 }
 
-var rightEye = {};
-var leftEye = {};
-rightEye.x = eyes.x + 150;
-rightEye.y = eyes.y;
-rightEye.r1 = eyes.r1;
-rightEye.r2 = eyes.r2;
-leftEye.x = eyes.x;
-leftEye.y = eyes.y;
-leftEye.r1 = eyes.r1;
-leftEye.r2 = eyes.r2
+window.requestAnimFrame = (function(callback) {
+    return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame ||
+    function(callback) {
+        window.setTimeout(callback, 1000 / 60);
+    };
+})();
 
-var rightEyeFunc = drawEyes(rightEye, ctx);
-var leftEyeFunc = drawEyes(leftEye, ctx);
+class Eyes {
+    constructor(eyes, context, canvas) {
+        this.x = eyes.x;
+        this.y = eyes.y;
+        this.r1 = eyes.r1;
+        this.r2 = eyes.r2;
+        this.ctx = context;
+        this.canvas = canvas;
+    }
 
-// wait one second before starting animation
+    drawOuter() {
+        let leftEyeX = this.x;
+        let rightEyeX = this.x + 150;
+        drawCircle(this.ctx, leftEyeX, this.y, this.r1);
+        drawCircle(this.ctx, rightEyeX, this.y, this.r1);
+    }
 
-// animate(eyes, canvas, ctx, mousePositionX, mousePositionY);
+    drawInner(x, y) {
+        let innerX = x;
+        let innerY = y;
+        drawCircle(this.ctx, innerX, innerY, this.r2);
+        drawCircle(this.ctx, innerX + 150, innerY, this.r2);
+    }
+
+    drawEyes(difX, difY) {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.drawOuter();
+        this.drawInner(difX, difY);
+    }
+
+}
+
+function drawCircle(ctx, x, y, r) {
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.stroke();
+}
+
+// Creating new object and using method to draw eyes first time.
+var eyesObject = new Eyes(eyes, ctx, canvas);
+eyesObject.drawEyes(eyes.x, eyes.y);
 
 // Mouse position detector
 document.onmousemove = handleMouseMove;
@@ -86,17 +88,16 @@ function handleMouseMove(e) {
             (doc && doc.clientTop  || body && body.clientTop  || 0 );
     }
 
-    // Use event.pageX / event.pageY here
-    document.getElementById("labelX").innerHTML = e.pageX;
-    document.getElementById("labelY").innerHTML = e.pageY;
-
+    // Calculating where the pupils should be.
     var pupilPosition = {};
     pupilPosition.x = (e.pageX <= boundaries.XMin) ? boundaries.XMin :
                       (e.pageX >= boundaries.XMax) ? boundaries.XMax : e.pageX;
     pupilPosition.y = (e.pageY <= boundaries.YMin) ? boundaries.YMin :
                       (e.pageY >= boundaries.YMax) ? boundaries.YMax : e.pageY;
 
-    console.log("pupilPosition.x -> " + pupilPosition.x);
-    console.log("pupilPosition.y -> " + pupilPosition.y);
-    
+    // request new frame
+    requestAnimFrame(function() {
+        eyesObject.drawEyes(pupilPosition.x, pupilPosition.y);
+    }); 
+
 }
